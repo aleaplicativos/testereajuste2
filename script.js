@@ -1,4 +1,3 @@
-
 function adicionarLinha() {
   const tabela = document.getElementById("tabelaItens").getElementsByTagName('tbody')[0];
   const indice = parseFloat(document.getElementById("indice").value.replace(',', '.')) / 100 || 0;
@@ -24,15 +23,22 @@ function adicionarLinha() {
   });
   for(let i=0;i<6;i++) {
     const cell = novaLinha.insertCell();
-    if (i === 2) cell.classList.add("sem-arred"); // index 2 corresponde à "Valor Unitário s/ Arred"
-    cell.textContent="-";
+    if (i === 2) cell.classList.add("sem-arred");
     if (i === 2) cell.style.display = "none";
+    cell.textContent="-";
   }
   const anos=obterAnos(dataInicio,dataFim);
   anos.forEach(()=>novaLinha.insertCell().textContent="-");
-  const celExcluir=novaLinha.insertCell();const btn=document.createElement("button");btn.textContent="Excluir";
-  btn.onclick=()=>{novaLinha.remove();atualizarTotais();};btn.style.backgroundColor="#cc0000";btn.style.color="white";
-  btn.style.border="none";btn.style.padding="5px 10px";btn.style.cursor="pointer";btn.style.borderRadius="4px";
+  const celExcluir=novaLinha.insertCell();
+  const btn=document.createElement("button");
+  btn.textContent="Excluir";
+  btn.onclick=()=>{novaLinha.remove();atualizarTotais();};
+  btn.style.backgroundColor="#cc0000";
+  btn.style.color="white";
+  btn.style.border="none";
+  btn.style.padding = "5px 10px";
+  btn.style.cursor = "pointer";
+  btn.style.borderRadius = "4px";
   celExcluir.appendChild(btn);
 }
 
@@ -45,7 +51,7 @@ function atualizarLinha(linha,indice,dataInicio,dataFim){
   const diff=vTotalUpd-vTotal;
   linha.cells[5].textContent=formatarMoeda(vTotal);
   linha.cells[6].textContent=formatarMoeda(vUnitUpd);
-  linha.cells[7].textContent=formatarMoeda(vUnitUpd); // agora formatado como moeda
+  linha.cells[7].textContent=vUnitUpd.toFixed(10).replace('.', ',');
   linha.cells[8].textContent=formatarMoeda(vTotalUpd);
   linha.cells[9].textContent=formatarMoeda(diff);
   const anos=obterAnos(dataInicio,dataFim);
@@ -72,27 +78,44 @@ function obterAnos(start,end){const a=[];for(let y=start.getFullYear();y<=end.ge
 function gerarColunasAnos(start,end){
   const head=document.getElementById("tabelaItens").tHead.rows[0];
   while(head.cells.length > 10) head.deleteCell(-1);
-  obterAnos(start,end).forEach(y=>{const th=document.createElement("th");th.textContent="Exercício "+y;head.appendChild(th);});
+  obterAnos(start,end).forEach(y=>{
+    const th=document.createElement("th");
+    th.textContent="Exercício "+y;
+    head.appendChild(th);
+  });
   if (!document.getElementById("thAcoes")) {
-    const th=document.createElement("th");th.id="thAcoes";th.textContent="Ações";
+    const th=document.createElement("th");
+    th.id="thAcoes";
+    th.textContent="Ações";
     head.appendChild(th);
   }
 }
 
 function ratearPorAnoDias(val,start,end){
   const dias={};const i=new Date(start);i.setHours(0,0,0,0);const f=new Date(end);f.setHours(0,0,0,0);
-  for(let d=new Date(i);d<=f;d.setDate(d.getDate()+1)){const y=d.getFullYear();dias[y]=(dias[y]||0)+1;}
+  for(let d=new Date(i);d<=f;d.setDate(d.getDate()+1)){
+    const y=d.getFullYear();
+    dias[y]=(dias[y]||0)+1;
+  }
   const tot=Object.values(dias).reduce((x,y)=>x+y,0);const res={};
   for(const y in dias) res[y]=val*(dias[y]/tot);
   return res;
 }
 
-function copiarTabela(){const t=document.getElementById("tabelaItens"),r=document.createRange();r.selectNode(t);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand("copy");alert("Tabela copiada");}
+function copiarTabela(){
+  const t=document.getElementById("tabelaItens"),
+        r=document.createRange();
+  r.selectNode(t);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(r);
+  document.execCommand("copy");
+  alert("Tabela copiada");
+}
 
 function formatarMoeda(v){return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
-function desformatarMoeda(f){return parseFloat((f||'').replace(/[R$\s.]/g,'').replace(',', '.'))||0;}
+function desformatarMoeda(f){return parseFloat((f||'').replace(/[R$\\s.]/g,'').replace(',', '.'))||0;}
 function formatarNumero(v){return parseInt(v,10).toLocaleString('pt-BR');}
-function desformatarNumero(f){return parseInt((f||'').replace(/\./g,''),10)||0;}
+function desformatarNumero(f){return parseInt((f||'').replace(/\\./g,''),10)||0;}
 
 function toggleColunaSemArredondamento() {
   const th = document.getElementById("thSemArredondamento");
