@@ -1,4 +1,3 @@
-
 function adicionarLinha() {
   const tabela = document.getElementById("tabelaItens").getElementsByTagName('tbody')[0];
   const indice = parseFloat(document.getElementById("indice").value.replace(',', '.')) / 100 || 0;
@@ -29,6 +28,10 @@ function adicionarLinha() {
   btn.onclick=()=>{novaLinha.remove();atualizarTotais();};btn.style.backgroundColor="#cc0000";btn.style.color="white";
   btn.style.border="none";btn.style.padding="5px 10px";btn.style.cursor="pointer";btn.style.borderRadius="4px";
   celExcluir.appendChild(btn);
+
+  // aplica visibilidade da coluna de arredondamento ao inserir nova linha
+  const mostrar = document.getElementById("thSemArredondamento").style.display !== "none";
+  novaLinha.cells[7].style.display = mostrar ? "" : "none";
 }
 
 function atualizarLinha(linha,indice,dataInicio,dataFim){
@@ -78,7 +81,11 @@ function ratearPorAnoDias(val,start,end){
   return res;
 }
 
-function copiarTabela(){const t=document.getElementById("tabelaItens"),r=document.createRange();r.selectNode(t);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand("copy");alert("Tabela copiada");}
+function copiarTabela(){
+  const t=document.getElementById("tabelaItens"),r=document.createRange();
+  r.selectNode(t);window.getSelection().removeAllRanges();window.getSelection().addRange(r);
+  document.execCommand("copy");alert("Tabela copiada");
+}
 
 function formatarMoeda(v){return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function desformatarMoeda(f){return parseFloat((f||'').replace(/[R$\s.]/g,'').replace(',', '.'))||0;}
@@ -90,26 +97,13 @@ function toggleColunaSemArredondamento() {
   const mostrar = th.style.display === "none";
   th.style.display = mostrar ? "" : "none";
 
-  const tabela = document.getElementById("tabelaItens");
-  const rows = tabela.rows;
-
+  const rows = document.getElementById("tabelaItens").tBodies[0].rows;
   for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const cell = row.cells[7];
-    if (cell) {
-      if (mostrar) {
-        // Mostrar a coluna
-        cell.style.display = "";
-      } else {
-        // Ocultar a coluna e corrigir deslocamento
-        cell.style.display = "none";
-      }
-    }
+    const cell = rows[i].cells[7];
+    if (cell) cell.style.display = mostrar ? "" : "none";
   }
 
-  // Atualizar os textos do botão
-  const botao = document.getElementById("btnToggleArred");
-  botao.textContent = mostrar
+  document.getElementById("btnToggleArred").textContent = mostrar
     ? "Ocultar valor unitário sem arredondamento"
     : "Mostrar valor unitário sem arredondamento";
 }
