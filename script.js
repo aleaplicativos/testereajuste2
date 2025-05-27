@@ -3,169 +3,96 @@ function adicionarLinha() {
   const indice = parseFloat(document.getElementById("indice").value.replace(',', '.')) / 100 || 0;
   const dataInicio = new Date(document.getElementById("dataInicio").value);
   const dataFim = new Date(document.getElementById("dataFim").value);
-  if (isNaN(dataInicio) || isNaN(dataFim)) {
-    alert("Preencha datas.");
-    return;
-  }
-  gerarColunasAnos(dataInicio, dataFim);
+  if (isNaN(dataInicio)||isNaN(dataFim)) {alert("Preencha datas.");return;}
+  gerarColunasAnos(dataInicio,dataFim);
   const novaLinha = tabela.insertRow();
-  const campos = ["item", "descricao", "unidade", "quantidade", "valorUnitario"];
-  campos.forEach(campo => {
-    const celula = novaLinha.insertCell();
-    const input = document.createElement("input");
-    input.type = "text";
-    input.step = "0.01";
-    if (campo === "valorUnitario") {
-      input.addEventListener("input", () => {
-        let v = input.value.replace(/\D/g, "");
-        v = (parseInt(v, 10) / 100).toFixed(2);
-        input.value = formatarMoeda(v);
-      });
+  const campos=["item","descricao","unidade","quantidade","valorUnitario"];
+  campos.forEach(campo=>{
+    const celula=novaLinha.insertCell();
+    const input=document.createElement("input");
+    input.type="text";
+    input.step="0.01";
+    if(campo==="valorUnitario"){
+      input.addEventListener("input",()=>{let v=input.value.replace(/\D/g,"");v=(parseInt(v,10)/100).toFixed(2);input.value=formatarMoeda(v);});
     }
-    if (campo === "quantidade") {
-      input.addEventListener("input", () => {
-        let v = input.value.replace(/\D/g, "");
-        input.value = formatarNumero(v);
-      });
+    if(campo==="quantidade"){
+      input.addEventListener("input",()=>{let v=input.value.replace(/\D/g,"");input.value=formatarNumero(v);});
     }
-    input.oninput = () => atualizarLinha(novaLinha, indice, dataInicio, dataFim);
+    input.oninput=()=>atualizarLinha(novaLinha,indice,dataInicio,dataFim);
     celula.appendChild(input);
   });
-
-  // Colunas calculadas fixas
-  for (let i = 0; i < 5; i++) novaLinha.insertCell().textContent = "-";
-
-  // Colunas de exercícios
-  const anos = obterAnos(dataInicio, dataFim);
-  anos.forEach(() => novaLinha.insertCell().textContent = "-");
-
-  // Botão Excluir
-  const celExcluir = novaLinha.insertCell();
-  const btn = document.createElement("button");
-  btn.textContent = "Excluir";
-  btn.onclick = () => {
-    novaLinha.remove();
-    atualizarTotais();
-  };
-  Object.assign(btn.style, {
-    backgroundColor: "#cc0000", color: "white", border: "none",
-    padding: "5px 10px", cursor: "pointer", borderRadius: "4px"
-  });
+  for(let i=0;i<5;i++) novaLinha.insertCell().textContent="-";
+  const anos=obterAnos(dataInicio,dataFim);
+  anos.forEach(()=>novaLinha.insertCell().textContent="-");
+  const celExcluir=novaLinha.insertCell();const btn=document.createElement("button");btn.textContent="Excluir";
+  btn.onclick=()=>{novaLinha.remove();atualizarTotais();};btn.style.backgroundColor="#cc0000";btn.style.color="white";
+  btn.style.border="none";btn.style.padding="5px 10px";btn.style.cursor="pointer";btn.style.borderRadius="4px";
   celExcluir.appendChild(btn);
-
-  // Visibilidade da coluna VU sem arredondamento
-  const mostrar = document.getElementById("thSemArredondamento").style.display !== "none";
-  novaLinha.cells[7].style.display = mostrar ? "" : "none";
 }
 
-function atualizarLinha(linha, indice, dataInicio, dataFim) {
-  const qtd = desformatarNumero(linha.cells[3].firstChild?.value);
-  const vUnit = desformatarMoeda(linha.cells[4].firstChild?.value);
-  const vTotal = qtd * vUnit;
-  const vUnitUpd = vUnit * (1 + indice);
-  const vTotalUpd = qtd * vUnitUpd;
-  const diff = vTotalUpd - vTotal;
-
-  linha.cells[5].textContent = formatarMoeda(vTotal);
-  linha.cells[6].textContent = formatarMoeda(vUnitUpd);
-  linha.cells[7].textContent = vUnitUpd.toString().replace('.', ',');
-  linha.cells[8].textContent = formatarMoeda(vTotalUpd);
-  linha.cells[9].textContent = formatarMoeda(diff);
-
-  const anos = obterAnos(dataInicio, dataFim);
-  const rateio = ratearPorAnoDias(vTotalUpd, dataInicio, dataFim);
-  anos.forEach((ano, idx) => linha.cells[10 + idx].textContent = formatarMoeda(rateio[ano] || 0));
-
+function atualizarLinha(linha,indice,dataInicio,dataFim){
+  const qtd=desformatarNumero(linha.cells[3].firstChild?.value);
+  const vUnit=desformatarMoeda(linha.cells[4].firstChild?.value);
+  const vTotal=qtd*vUnit;
+  const vUnitUpd=vUnit*(1+indice);
+  const vTotalUpd=qtd*vUnitUpd;
+  const diff=vTotalUpd-vTotal;
+  linha.cells[5].textContent=formatarMoeda(vTotal);
+  linha.cells[6].textContent=formatarMoeda(vUnitUpd);
+  linha.cells[7].textContent=vUnitUpd.toString().replace('.', ',');
+  linha.cells[8].textContent=formatarMoeda(vTotalUpd);
+  linha.cells[9].textContent=formatarMoeda(diff);
+  const anos=obterAnos(dataInicio,dataFim);
+  const rateio=ratearPorAnoDias(vTotalUpd,dataInicio,dataFim);
+  anos.forEach((ano,idx)=>linha.cells[10+idx].textContent=formatarMoeda(rateio[ano]||0));
   atualizarTotais();
 }
 
-function atualizarTotais() {
-  const rows = document.getElementById("tabelaItens").tBodies[0].rows;
-  let tA = 0, tU = 0, tD = 0;
-  Array.from(rows).forEach(r => {
-    tA += desformatarMoeda(r.cells[5].textContent); // Total Atual
-    tU += desformatarMoeda(r.cells[8].textContent); // Total Atualizado
-    tD += desformatarMoeda(r.cells[9].textContent); // Diferença
-  });
-  document.getElementById("totalAtual").textContent = formatarMoeda(tA);
-  document.getElementById("totalAtualizado").textContent = formatarMoeda(tU);
-  document.getElementById("totalDiferenca").textContent = formatarMoeda(tD);
+function atualizarTotais(){
+  const rows=document.getElementById("tabelaItens").tBodies[0].rows;
+  let tA=0,tU=0,tD=0;
+  Array.from(rows).forEach(r=>{tA+=desformatarMoeda(r.cells[5].textContent);tU+=desformatarMoeda(r.cells[8].textContent);tD+=desformatarMoeda(r.cells[9].textContent);});
+  document.getElementById("totalAtual").textContent=formatarMoeda(tA);
+  document.getElementById("totalAtualizado").textContent=formatarMoeda(tU);
+  document.getElementById("totalDiferenca").textContent=formatarMoeda(tD);
 }
 
-function obterAnos(start, end) {
-  const a = [];
-  for (let y = start.getFullYear(); y <= end.getFullYear(); y++) a.push(y);
-  return a;
-}
+function obterAnos(start,end){const a=[];for(let y=start.getFullYear();y<=end.getFullYear();y++)a.push(y);return a;}
 
-function gerarColunasAnos(start, end) {
-  const head = document.getElementById("tabelaItens").tHead.rows[0];
-  while (head.cells.length > 10) head.deleteCell(-1);
-  obterAnos(start, end).forEach(y => {
-    const th = document.createElement("th");
-    th.textContent = "Exercício " + y;
-    head.appendChild(th);
-  });
+function gerarColunasAnos(start,end){
+  const head=document.getElementById("tabelaItens").tHead.rows[0];
+  while(head.cells.length > 10) head.deleteCell(-1);
+  obterAnos(start,end).forEach(y=>{const th=document.createElement("th");th.textContent="Exercício "+y;head.appendChild(th);});
   if (!document.getElementById("thAcoes")) {
-    const th = document.createElement("th");
-    th.id = "thAcoes";
-    th.textContent = "Ações";
+    const th=document.createElement("th");th.id="thAcoes";th.textContent="Ações";
     head.appendChild(th);
   }
 }
 
-function ratearPorAnoDias(val, start, end) {
-  const dias = {}, i = new Date(start), f = new Date(end);
-  i.setHours(0, 0, 0, 0);
-  f.setHours(0, 0, 0, 0);
-  for (let d = new Date(i); d <= f; d.setDate(d.getDate() + 1)) {
-    const y = d.getFullYear();
-    dias[y] = (dias[y] || 0) + 1;
-  }
-  const tot = Object.values(dias).reduce((x, y) => x + y, 0);
-  const res = {};
-  for (const y in dias) res[y] = val * (dias[y] / tot);
+function ratearPorAnoDias(val,start,end){
+  const dias={};const i=new Date(start);i.setHours(0,0,0,0);const f=new Date(end);f.setHours(0,0,0,0);
+  for(let d=new Date(i);d<=f;d.setDate(d.getDate()+1)){const y=d.getFullYear();dias[y]=(dias[y]||0)+1;}
+  const tot=Object.values(dias).reduce((x,y)=>x+y,0);const res={};
+  for(const y in dias) res[y]=val*(dias[y]/tot);
   return res;
 }
 
-function copiarTabela() {
-  const t = document.getElementById("tabelaItens"), r = document.createRange();
-  r.selectNode(t);
-  window.getSelection().removeAllRanges();
-  window.getSelection().addRange(r);
-  document.execCommand("copy");
-  alert("Tabela copiada");
-}
+function copiarTabela(){const t=document.getElementById("tabelaItens"),r=document.createRange();r.selectNode(t);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand("copy");alert("Tabela copiada");}
 
-function formatarMoeda(v) {
-  return parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-function desformatarMoeda(f) {
-  return parseFloat((f || '').replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
-}
-function formatarNumero(v) {
-  return parseInt(v, 10).toLocaleString('pt-BR');
-}
-function desformatarNumero(f) {
-  return parseInt((f || '').replace(/\./g, ''), 10) || 0;
-}
+function formatarMoeda(v){return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function desformatarMoeda(f){return parseFloat((f||'').replace(/[R$\s.]/g,'').replace(',', '.'))||0;}
+function formatarNumero(v){return parseInt(v,10).toLocaleString('pt-BR');}
+function desformatarNumero(f){return parseInt((f||'').replace(/\./g,''),10)||0;}
 
 function toggleColunaSemArredondamento() {
   const th = document.getElementById("thSemArredondamento");
   const mostrar = th.style.display === "none";
   th.style.display = mostrar ? "" : "none";
-
-  const rows = document.getElementById("tabelaItens").tBodies[0].rows;
-  for (let i = 0; i < rows.length; i++) {
+  const rows = document.getElementById("tabelaItens").rows;
+  for (let i = 1; i < rows.length; i++) {
     const cell = rows[i].cells[7];
     if (cell) cell.style.display = mostrar ? "" : "none";
   }
-
-  document.getElementById("btnToggleArred").textContent = mostrar
-    ? "Ocultar valor unitário sem arredondamento"
-    : "Mostrar valor unitário sem arredondamento";
-}
-</script>
-
-</body>
-</html>
+  const botao = document.getElementById("btnToggleArred");
+  botao.textContent = mostrar ? "Ocultar valor unitário sem arredondamento" : "Mostrar valor unitário sem arredondamento";
+} 
