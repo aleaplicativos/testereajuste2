@@ -89,11 +89,27 @@ function toggleColunaSemArredondamento() {
   const th = document.getElementById("thSemArredondamento");
   const mostrar = th.style.display === "none";
   th.style.display = mostrar ? "" : "none";
-  const rows = document.getElementById("tabelaItens").rows;
-  for (let i = 1; i < rows.length; i++) {
-    const cell = rows[i].cells[7];
-    if (cell) cell.style.display = mostrar ? "" : "none";
+
+  const tabela = document.getElementById("tabelaItens");
+  const rows = tabela.rows;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cell = row.cells[7];
+    if (cell) {
+      if (mostrar) {
+        // Mostrar a coluna
+        cell.style.display = "";
+      } else {
+        // Ocultar a coluna e corrigir deslocamento
+        cell.style.display = "none";
+      }
+    }
   }
+
+  // Atualizar os textos do botão
   const botao = document.getElementById("btnToggleArred");
-  botao.textContent = mostrar ? "Ocultar valor unitário sem arredondamento" : "Mostrar valor unitário sem arredondamento";
+  botao.textContent = mostrar
+    ? "Ocultar valor unitário sem arredondamento"
+    : "Mostrar valor unitário sem arredondamento";
 }
